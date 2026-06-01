@@ -53,7 +53,7 @@ local winOk, winErr = pcall(function()
         ToggleKey = Enum.KeyCode.RightShift,
         Topbar = { Height = 52, ButtonsType = "Default" },
         OpenButton = {
-            Enabled = true, Title = "(MNA)", Icon = "atom",
+            Enabled = true, Title = "(MNA)", Icon = "rbxassetid://134481698719699",
             CornerRadius = UDim.new(1, 0), StrokeThickness = 2,
             Draggable = true, OnlyMobile = false, Scale = 0.6,
             Color = ColorSequence.new(Color3.fromHex("#4ade80"), Color3.fromHex("#22c55e"))
@@ -1404,22 +1404,6 @@ local function onToggleYTTA(value)
         Config.UB.Stats.startTime = tick()
         Tasks.ubtask = task.spawn(ub_loop)
         NotifySuccess("Fishing Extreme", "Aktif! Rainbow counter reset.")
-    else
-        Config.UB.Active = false; _G.NotifQueue = {}; _G.NotifActive = 0
-        patchInstantBaitOverrideToCastPosition(false); disableNotifDelay(); disableBlockNotif()
-        pcall(function() if isMobile and Controllers.Notification and origPlaySmallItemObtained then Controllers.Notification.PlaySmallItemObtained = origPlaySmallItemObtained end end)
-        safeFire(function() if Config.UB.Remotes.CancelFishingInputs then CallRemote(Config.UB.Remotes.CancelFishingInputs) end end)
-        task.wait(0.3)
-        if Tasks.ubtask then pcall(function() task.cancel(Tasks.ubtask) end); Tasks.ubtask = nil end
-        NotifyWarning("Fishing Extreme", "Dimatikan.")
-    end
-end
-
-UB_init(); Config.UB.Active = true; needCast = true
-        _G.NotifQueue = {}; _G.NotifActive = 0; isCaught = false
-        Config.UB.Stats.startTime = tick()
-        Tasks.ubtask = task.spawn(ub_loop)
-        NotifySuccess("Fishing Extreme", "Aktif!")
     else
         Config.UB.Active = false; _G.NotifQueue = {}; _G.NotifActive = 0
         patchInstantBaitOverrideToCastPosition(false); disableNotifDelay(); disableBlockNotif()
