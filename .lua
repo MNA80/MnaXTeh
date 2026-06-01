@@ -45,7 +45,7 @@ local winOk, winErr = pcall(function()
         MaxSize = Vector2.new(900, 650),
         Resizable = true,
         Acrylic = true,
-        Theme = "Drak",
+        Theme = "Dark",
         Transparent = false,
         -- BACKGROUND: 40% keliatan (60% transparan/burem)
         Background = "rbxassetid://90650224727978",
