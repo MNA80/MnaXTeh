@@ -52,12 +52,12 @@ local winOk, winErr = pcall(function()
         BackgroundImageTransparency = 0.6,
         ToggleKey = Enum.KeyCode.RightShift,
         Topbar = { Height = 52, ButtonsType = "Default" },
-        OpenButton = {
-            Enabled = true, Title = "(MNA)", Icon = "rbxassetid://134481698719699",
-            CornerRadius = UDim.new(1, 0), StrokeThickness = 2,
-            Draggable = true, OnlyMobile = false, Scale = 0.6,
-            Color = ColorSequence.new(Color3.fromHex("#4ade80"), Color3.fromHex("#22c55e"))
-        },
+          OpenButton = {
+    Enabled = true, Title = "[MNA⚙️]", Icon = "rbxassetid://134481698719699",
+    CornerRadius = UDim.new(1, 0), StrokeThickness = 2,
+    Draggable = true, OnlyMobile = false, Scale = 0.45,
+    Color = ColorSequence.new(Color3.fromHex("#cc0000"), Color3.fromHex("#ff0000"))
+},          
         User = { Enabled = true, Anonymous = false, Callback = function() end }
     })
 end)
@@ -1226,7 +1226,7 @@ local function ub_loop()
             if Config.antiOKOK then 
                 completeDelay = completeDelay + math.random(-8, 8) / 100 
             end
-            task.wait(math.max(completeDelay, 0.8))
+            task.wait(math.max(completeDelay, 0.3))
 
             if not skip then
                 pcall(function() 
@@ -1244,7 +1244,7 @@ local function ub_loop()
                     isCaught = false
                     local waited = 0
                     -- FIXED: Polling lebih cepat (0.03 -> 0.02, timeout 0.5 -> 0.4)
-                    while not isCaught and waited < 0.25 do 
+                    while not isCaught and waited < 0.4 do 
                         task.wait(0.01); 
                         waited = waited + 0.01 
                     end
@@ -4901,6 +4901,22 @@ if MiscTab then
             NotifySuccess("Rejoin", "Rejoining..."); task.wait(1)
             pcall(function() TeleportService:Teleport(game.PlaceId, LocalPlayer) end)
         end })
+        MiscTab:Button({ 
+    Title = "Rejoin Trade Plaza", 
+    Desc = "Rejoin ke server Trade Plaza",
+    Callback = function()
+        NotifySuccess("Trade Plaza", "Menuju Trade Plaza...")
+        task.wait(1)
+        pcall(function() 
+            -- Place ID Trade Plaza Fish It
+            TeleportService:Teleport(15532962648, LocalPlayer) 
+        end)
+        -- Fallback pakai remote
+        if Events.TradePlazaTeleport then
+            pcall(function() Events.TradePlazaTeleport:FireServer() end)
+        end
+    end 
+})
         MiscTab:Toggle({ Title = "Teleport New Server (Beta)", Value = false, Callback = function(val)
             _G.AutoNewServer = val
             if val then
