@@ -1133,7 +1133,7 @@ local function replayAmblatantNotif()
             pcall(function() FireLocalEvent(xr_caught, unpack(lastValidFishCaught)) end) 
         end
 
-        task.wait(0.01)
+        task.wait(0.001)
 
         if xr_notif and #lastValidFishNotif > 0 then
             for i = 1, Config.YTTA.NotifCount do
@@ -1167,7 +1167,7 @@ local function replayAmblatantNotif()
                     pcall(function() triggerRainbowGoldenUpdate(notifData, true) end)
                 end
 
-                task.wait(0.01)
+                task.wait(0.001)
 
                 if xr_caught and #lastValidFishCaught > 0 then
                     pcall(function() FireLocalEvent(xr_caught, unpack(lastValidFishCaught)) end)
@@ -1196,7 +1196,7 @@ local function ub_loop()
             end
 
             -- FIXED: Base wait lebih cepat (0.7 -> 0.5)
-            local baseWait = needCast and 0.3 or Config.UB.Settings.CancelDelay
+            local baseWait = needCast and 0.2 or Config.UB.Settings.CancelDelay
             if Config.antiOKOK then 
                 baseWait = baseWait + math.random(3, 15) / 100 
             end
@@ -1226,7 +1226,7 @@ local function ub_loop()
             if Config.antiOKOK then 
                 completeDelay = completeDelay + math.random(-8, 8) / 100 
             end
-            task.wait(math.max(completeDelay, 0.3))
+            task.wait(math.max(completeDelay, 0.02))
 
             if not skip then
                 pcall(function() 
@@ -1244,7 +1244,7 @@ local function ub_loop()
                     isCaught = false
                     local waited = 0
                     -- FIXED: Polling lebih cepat (0.03 -> 0.02, timeout 0.5 -> 0.4)
-                    while not isCaught and waited < 0.4 do 
+                    while not isCaught and waited < 0.3 do 
                         task.wait(0.01); 
                         waited = waited + 0.01 
                     end
@@ -1290,7 +1290,7 @@ local function ub_loop()
                                     pcall(function() FireLocalEvent(xr_caught, unpack(lastValidFishCaught)) end) 
                                 end
 
-                                task.wait(0.005)
+                                task.wait(0.004)
 
                                 if xr_notif and #lastValidFishNotif > 0 then
                                     for i = 1, Config.YTTA.NotifCount do
