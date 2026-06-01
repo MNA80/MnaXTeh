@@ -4,7 +4,6 @@ local supportedMaps = {["121864768012064"] = "Fish it"}
 local success, info = pcall(function() return MarketplaceService:GetProductInfo(game.PlaceId) end)
 local mapName = success and info.Name or "Unknown"
 local isSupported = supportedMaps[tostring(game.PlaceId)] ~= nil
--- SAFE WINDUI 1.6.63 LOADING
 local WindUI = nil
 local windLoadOk, windLoadErr = pcall(function()
     WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/download/1.6.63/main.lua"))()
