@@ -1693,106 +1693,6 @@ local function runMultiEventTP()
     end
     destroyEventPlatform()
 end
--- QUANTUM PANEL
-local function CreateQuantumPanel()
-    local playerGui = LocalPlayer:WaitForChild("PlayerGui")
-    local gui = Instance.new("ScreenGui")
-    gui.Name = "MNAPANEL"; gui.IgnoreGuiInset = true; gui.ResetOnSpawn = false; gui.Enabled = true; gui.Parent = CoreGui
-    local main = Instance.new("Frame")
-    main.Size = UDim2.new(0, 220, 0, 24); main.Position = UDim2.new(0.5, -110, 0.5, -120)
-    main.BackgroundColor3 = Color3.fromRGB(15, 30, 18); main.BackgroundTransparency = 0.55
-    main.BorderSizePixel = 0; main.Active = true; main.Parent = gui
-    Instance.new("UICorner", main).CornerRadius = UDim.new(0, 6)
-    local stroke = Instance.new("UIStroke", main)
-    stroke.Color = Color3.fromRGB(57, 255, 20); stroke.Thickness = 1; stroke.Transparency = 0.6
-    local content = Instance.new("Frame", main)
-    content.Size = UDim2.new(1, -6, 1, -2); content.Position = UDim2.new(0, 3, 0, 1); content.BackgroundTransparency = 1
-    local layout = Instance.new("UIListLayout", content)
-    layout.FillDirection = Enum.FillDirection.Horizontal; layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-    layout.VerticalAlignment = Enum.VerticalAlignment.Center; layout.Padding = UDim.new(0, 4)
-    local function makeStat(labelText)
-        local label = Instance.new("TextLabel")
-        label.Size = UDim2.new(0, 0, 1, 0); label.AutomaticSize = Enum.AutomaticSize.X
-        label.BackgroundTransparency = 1; label.Font = Enum.Font.GothamBold; label.TextSize = 8
-        label.TextWrapped = false; label.TextColor3 = Color3.fromRGB(170, 210, 180); label.Text = labelText; label.Parent = content
-        return label
-    end
-    local pingLabel = makeStat("PING: 0ms")
-    local fpsLabel = makeStat("FPS: 0")
-    local notifLabel = makeStat("NOTIF: 0")
-    local dragging = false
-    local dragStart, startPos
-    main.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            dragging = true; dragStart = input.Position; startPos = main.Position
-            input.Changed:Connect(function() if input.UserInputState == Enum.UserInputState.End then dragging = false end end)
-        end
-    end)
-    UserInputService.InputChanged:Connect(function(input)
-        if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-            local delta = input.Position - dragStart
-            main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-        end
-    end)
-    local frames, fps, last = 0, 0, tick()
-    local fpsConn = RunService.RenderStepped:Connect(function()
-        frames = frames + 1
-        if tick() - last >= 1 then fps = frames; frames = 0; last = tick() end
-    end)
-    local function getPing()
-        local networkStats = Stats:FindFirstChild("Network")
-        if networkStats and networkStats:FindFirstChild("ServerStatsItem") then
-            local pingData = networkStats.ServerStatsItem:FindFirstChild("Data Ping")
-            if pingData then local val = pingData:GetValue(); if val then return math.floor(val) end end
-        end
-        return 0
-    end
-    local function getTotalNotifications()
-        local count = 0
-        pcall(function()
-            local textNotifications = playerGui:FindFirstChild("Text Notifications")
-            if textNotifications then
-                local frame = textNotifications:FindFirstChild("Frame")
-                if frame then for _, child in ipairs(frame:GetChildren()) do if child.Name == "Tile" then count = count + 1 end end end
-            end
-        end)
-        return count
-    end
-    local function color(label, v, y, r)
-        if v >= r then label.TextColor3 = Color3.fromRGB(255, 80, 80)
-        elseif v >= y then label.TextColor3 = Color3.fromRGB(255, 220, 0)
-        else label.TextColor3 = Color3.fromRGB(170, 210, 180) end
-    end
-    local updateThread = task.spawn(function()
-        while gui and gui.Parent do
-            pcall(function()
-                PingMonitor:Update()
-                local ping = getPing(); local notifCount = getTotalNotifications(); local caught = _sessionCatchCount
-                pingLabel.Text = "PING: " .. ping .. "ms"; fpsLabel.Text = "FPS: " .. fps
-                notifLabel.Text = "NOTIF: " .. notifCount; caughtLabel.Text = "CAUGHT: " .. caught
-                color(pingLabel, ping, 120, 200); color(fpsLabel, fps, 40, 90)
-                color(notifLabel, notifCount, 8, 20); color(caughtLabel, caught, 50, 100)
-            end)
-            task.wait(0.8)
-        end
-    end)
-    gui.Destroying:Connect(function()
-        pcall(function() fpsConn:Disconnect() end)
-        pcall(function() task.cancel(updateThread) end)
-    end)
-    return gui
-end
-local statsPanelGui = CreateQuantumPanel()
-
-pcall(function()
-    for _, v in pairs(getconnections(LocalPlayer.Idled)) do
-        if v.Disable then v.Disable() elseif v.Disconnect then v.Disconnect() end
-    end
-end)
-
--- ============================================
--- ENCHANT SYSTEM (MERGED FROM NiCH/Noxius)
--- ============================================
 
 local STONE_IDS = {
     ["Enchant Stones"]        = 10,
@@ -5018,7 +4918,7 @@ if MiscTab then
             NotifySuccess("Rejoin", "Rejoining..."); task.wait(1)
             pcall(function() TeleportService:Teleport(game.PlaceId, LocalPlayer) end)
         end })
-        MiscTab:Toggle({ Title = "TP New Server (Beta)", Value = false, Callback = function(val)
+        MiscTab:Toggle({ Title = "Teleport New Server (Beta)", Value = false, Callback = function(val)
             _G.AutoNewServer = val
             if val then
                 task.spawn(function()
