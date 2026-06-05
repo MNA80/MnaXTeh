@@ -36,7 +36,7 @@ end)
 local Window = nil
 local winOk, winErr = pcall(function()
     Window = WindUI:CreateWindow({
-        Title = "FatehDevelopment",
+        Title = "MNA HUB",
         Icon = "rbxassetid://134481698719699",
         Author = "Fish It | https://discord.gg/3jpA7XhPFj",
         Folder = "MNAHUB",
@@ -69,7 +69,7 @@ end
 
 pcall(function()
     Window:Tag({ Title = "V0.5", Color = Color3.fromRGB(180, 40, 40), Radius = 14 })
-    Window:Tag({ Title = "Tester",  Color = Color3.fromRGB(100, 20, 20), Radius = 14 })
+    Window:Tag({ Title = "FREE",  Color = Color3.fromRGB(100, 20, 20), Radius = 14 })
 end)
 
 local function SafeCreate(creationFunc, errorPrefix)
@@ -78,17 +78,17 @@ local function SafeCreate(creationFunc, errorPrefix)
     return result
 end
 -- TABS
-local InfoTab      = SafeCreate(function() return Window:Tab({ Title = "Info",       Icon = "info" })          end, "InfoTab")
-local PlayersTab   = SafeCreate(function() return Window:Tab({ Title = "Player",    Icon = "user" })          end, "PlayersTab")
-local MainTab      = SafeCreate(function() return Window:Tab({ Title = "Automaly", Icon = "bot" })           end, "MainTab")
-local ExclusiveTab = SafeCreate(function() return Window:Tab({ Title = "Auto Fishing", Icon = "fish" })         end, "ExclusiveTab")
-local CraftAbilityTab = SafeCreate(function() return Window:Tab({ Title = "Craft", Icon = "wrench" }) end, "CraftAbilityTab")
-local AquariumTab  = SafeCreate(function() return Window:Tab({ Title = "Aquarium",   Icon = "droples" })     end, "AquariumTab")
-local TeleportTab  = SafeCreate(function() return Window:Tab({ Title = "Teleport",   Icon = "map-pin" })      end, "TeleportTab")
-local ShopTab      = SafeCreate(function() return Window:Tab({ Title = "Shop",       Icon = "shoping-cart" }) end, "ShopTab")
-local EventTab     = SafeCreate(function() return Window:Tab({ Title = "Event",      Icon = "calendar" })     end, "EventTab")
-local MiscTab      = SafeCreate(function() return Window:Tab({ Title = "Misc",       Icon = "settings" })     end, "MiscTab")
-local TradeTab     = SafeCreate(function() return Window:Tab({ Title = "Trade",      Icon = "repeat" })       end, "TradeTab")
+local InfoTab      = SafeCreate(function() return Window:Tab({ Title = "Info",       Icon = "" })          end, "InfoTab")
+local PlayersTab   = SafeCreate(function() return Window:Tab({ Title = "Player",    Icon = "" })          end, "PlayersTab")
+local MainTab      = SafeCreate(function() return Window:Tab({ Title = "Automaly", Icon = "" })           end, "MainTab")
+local ExclusiveTab = SafeCreate(function() return Window:Tab({ Title = "Auto Fishing", Icon = "" })         end, "ExclusiveTab")
+local CraftAbilityTab = SafeCreate(function() return Window:Tab({ Title = "Craft", Icon = "" }) end, "CraftAbilityTab")
+local AquariumTab  = SafeCreate(function() return Window:Tab({ Title = "Aquarium",   Icon = "" })     end, "AquariumTab")
+local TeleportTab  = SafeCreate(function() return Window:Tab({ Title = "Teleport",   Icon = "" })      end, "TeleportTab")
+local ShopTab      = SafeCreate(function() return Window:Tab({ Title = "Shop",       Icon = "" }) end, "ShopTab")
+local EventTab     = SafeCreate(function() return Window:Tab({ Title = "Event",      Icon = "" })     end, "EventTab")
+local MiscTab      = SafeCreate(function() return Window:Tab({ Title = "Misc",       Icon = "" })     end, "MiscTab")
+local TradeTab     = SafeCreate(function() return Window:Tab({ Title = "Trade",      Icon = "" })       end, "TradeTab")
 -- SERVICES
 local Players           = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
