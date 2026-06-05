@@ -58,7 +58,14 @@ local winOk, winErr = pcall(function()
     Draggable = true, OnlyMobile = false, Scale = 0.45,
     Color = ColorSequence.new(Color3.fromHex("#cc0000"), Color3.fromHex("#ff0000"))
 },          
-        User = { Enabled = true, Anonymous = false, Callback = function() end }
+         User = { 
+    Enabled = true, 
+    Anonymous = false, 
+    Icon = "rbxassetid://9721372213",  -- ← ID AVATAR LO
+    Name = "ByFateh",                  -- ← TAMBAHIN NAMA LO
+    Tag = "Founder",                   -- ← TAMBAHIN TAG LO
+    Callback = function() end }
+                
     })
 end)
 
