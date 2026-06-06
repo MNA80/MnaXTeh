@@ -364,7 +364,7 @@ local Config = {
     -- Quantum Max (YTTA) Config
     YTTA = {
         Active = false, 
-        Settings = {MNADelay = 0.2}, 
+        Settings = {MNADelay = 0.3}, 
         NotifCount = 3, 
         NotifDelay = 0.1,
         -- FIXED: Rainbow/Golden/Fish counter per visual catch
@@ -1143,7 +1143,7 @@ local function replayAmblatantNotif()
             pcall(function() FireLocalEvent(xr_caught, unpack(lastValidFishCaught)) end) 
         end
 
-        task.wait(0.001)
+        task.wait(0.002)
 
         if xr_notif and #lastValidFishNotif > 0 then
             for i = 1, Config.YTTA.NotifCount do
@@ -1205,7 +1205,7 @@ local function ub_loop()
                 end)
             end
 
-            local baseWait = needCast and 0.05 or 0.05
+            local baseWait = needCast and 0.02 or Config.UB.Settings.CancelDelay
             if Config.antiOKOK then
                 baseWait = baseWait + math.random(3, 15) / 100
             end
@@ -1221,7 +1221,7 @@ local function ub_loop()
             if Config.antiOKOK then
                 task.wait(math.random(5, 10) / 100)
             else
-                task.wait(0.01)
+                task.wait(0.1)
             end
 
             safeFire(function()
@@ -1262,7 +1262,7 @@ local function ub_loop()
                 if Config.amblatant then
                     isCaught = false
                     local waited = 0
-                    while not isCaught and waited < 0.15 do
+                    while not isCaught and waited < 0.3 do
                         task.wait(0.01)
                         waited = waited + 0.01
                     end
