@@ -364,7 +364,7 @@ local Config = {
     -- Quantum Max (YTTA) Config
     YTTA = {
         Active = false, 
-        Settings = {MNADelay = 0.1}, 
+        Settings = {MNADelay = 0.2}, 
         NotifCount = 3, 
         NotifDelay = 0.1,
         -- FIXED: Rainbow/Golden/Fish counter per visual catch
