@@ -245,6 +245,9 @@ local function loadRemotes()
         {key="sell",                    name="RF/SellAllItems"},
         {key="SellItem",                name="RF/SellItem"},
         {key="favorite",                name="RE/FavoriteItem"},
+        -- Tambah di bagian FISHING CORE
+        {key="CaughtFishVisual",  name="RE/CaughtFishVisual"},
+        {key="FishCaughtRE",      name="RE/FishCaught"},
 -- TOTEM & NOTIF
         {key="SpawnTotem",              name="RE/SpawnTotem"},
         {key="TextNotification",        name="RE/TextNotification"},
@@ -841,9 +844,50 @@ end
 task.spawn(function()
     task.wait(1)
     pcall(function()
-        HookRemote("RE/FishCaught", "FishCaught")
-        HookRemote("RE/CaughtFishVisual", "CaughtVisual")
-        HookRemote("RE/ObtainedNewFishNotification", "FishNotif")
+        -- Hook langsung tanpa GetServerRemote (lebih reliable)
+        local xr_fishcaught = net and net:FindFirstChild("RE/FishCaught") 
+            or ReplicatedStorage:FindFirstChildWhichIsA("RemoteEvent", true)
+        
+        -- Scan semua children di net untuk find by name
+        if net then
+            for _, remote in ipairs(net:GetChildren()) do
+                if remote.Name == "RE/FishCaught" then
+                    _hookedRemotes["RE/FishCaught"] = true
+                    remote.OnClientEvent:Connect(function(...)
+                        _G.SavedData.FishCaught = {...}
+                        local args = {...}
+                        if tostring(args[1]) == tostring(LocalPlayer.Name) then
+                            saveCount += 1
+                            _sessionCatchCount += 1
+                            table.insert(_lastCatchTimestamps, tick())
+                            if #_lastCatchTimestamps > 60 then 
+                                table.remove(_lastCatchTimestamps, 1) 
+                            end
+                        end
+                    end)
+                end
+                
+                if remote.Name == "RE/CaughtFishVisual" then
+                    _hookedRemotes["RE/CaughtFishVisual"] = true
+                    remote.OnClientEvent:Connect(function(...)
+                        _G.SavedData.CaughtVisual = {...}
+                        -- Simpan ke history visual
+                        table.insert(lastValidCaughtVisualHistory, deepCopyArr({...}))
+                        if #lastValidCaughtVisualHistory > 20 then
+                            table.remove(lastValidCaughtVisualHistory, 1)
+                        end
+                        lastValidCaughtVisual = deepCopyArr({...})
+                    end)
+                end
+                
+                if remote.Name == "RE/ObtainedNewFishNotification" then
+                    _hookedRemotes["RE/ObtainedNewFishNotification"] = true
+                    remote.OnClientEvent:Connect(function(...)
+                        _G.SavedData.FishNotif = {...}
+                    end)
+                end
+            end
+        end
     end)
 end)
 
@@ -1094,37 +1138,24 @@ end
 local function triggerRainbowGoldenUpdate(notifData, forceIncrement)
     if not notifData or #notifData == 0 then return end
 
-    local isRainbow = false
-    local isGolden  = false
-
-    for i = 1, math.min(5, #notifData) do
-        local val = tostring(notifData[i]):lower()
-        if val:find("rainbow") then isRainbow = true end
-        if val:find("golden") or val:find("gold") then isGolden = true end
-    end
-
     local ev = _G._MNA_ReplionSetEvent
     if not ev then return end
 
-    -- Fish counter nambah SETIAP catch (confirmed format: InventoryNotifications/Items)
+    -- Fish counter nambah SETIAP visual catch
     Config.YTTA.FishCounter = Config.YTTA.FishCounter + 1
     pcall(function()
-        -- Format confirmed dari debug: Arg1=player, Arg2={cat,subcat}, Arg3=value
         FireLocalEvent(ev, LocalPlayer, {"InventoryNotifications", "Fish"}, Config.YTTA.FishCounter)
     end)
 
-    if isRainbow then
-        Config.YTTA.RainbowCounter = Config.YTTA.RainbowCounter + 1
+    -- Rainbow & Golden sudah di-handle oleh Replion hook di atas
+    -- Tapi kalau mau force trigger visual rainbow counter juga:
+    if Config.YTTA.RainbowCounter > 0 then
         pcall(function()
-            -- Format confirmed: {"Modifiers", "Rainbow"}, value=13 (dari image 1)
             FireLocalEvent(ev, LocalPlayer, {"Modifiers", "Rainbow"}, Config.YTTA.RainbowCounter)
         end)
     end
-
-    if isGolden then
-        Config.YTTA.GoldenCounter = Config.YTTA.GoldenCounter + 1
+    if Config.YTTA.GoldenCounter > 0 then
         pcall(function()
-            -- Format confirmed: {"Modifiers", "Golden"}, value=7 (dari image 3)
             FireLocalEvent(ev, LocalPlayer, {"Modifiers", "Golden"}, Config.YTTA.GoldenCounter)
         end)
     end
@@ -1132,8 +1163,8 @@ end
 
 local function replayAmblatantNotif()
     task.spawn(function()
-        local xr_caught = GetServerRemote("RE/FishCaught")
-        local xr_visual = GetServerRemote("RE/CaughtFishVisual")
+        local xr_caught = GetRemoteDirect("RE/FishCaught")
+        local xr_visual = GetRemoteDirect("RE/CaughtFishVisual")
         local xr_notif = Events.fishNotif
 
         -- FIXED: Reset rotation index setiap cycle baru
@@ -1190,6 +1221,15 @@ local function replayAmblatantNotif()
             end
         end
     end)
+end
+
+-- Tambah helper function baru di atas ub_loop
+local function GetRemoteDirect(targetName)
+    if not net then return nil end
+    for _, remote in ipairs(net:GetChildren()) do
+        if remote.Name == targetName then return remote end
+    end
+    return nil
 end
                         
 local function ub_loop()
@@ -1290,8 +1330,8 @@ local function ub_loop()
 
                         if #lastValidFishNotif > 0 then
                             task.spawn(function()
-                                local xr_caught = GetServerRemote("RE/FishCaught")
-                                local xr_visual = GetServerRemote("RE/CaughtFishVisual")
+                                local xr_caught = GetRemoteDirect("RE/FishCaught")
+                                local xr_visual = GetRemoteDirect("RE/CaughtFishVisual")
                                 local xr_notif  = Events.fishNotif
 
                                 Config.YTTA.VisualRotationIndex = 0
