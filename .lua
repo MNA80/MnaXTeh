@@ -1066,63 +1066,66 @@ local function updateReplionInventory(notifData)
     end)
 end
 
-local function triggerRainbowGoldenUpdate(notifData, forceIncrement)
-    -- FIXED: Selalu increment counter per catch visual
-    if not notifData or #notifData == 0 then return end
-
-    local isRainbow = false
-    local isGolden = false
-
-    -- Extract dari notif data
-    for idx = 1, math.min(5, #notifData) do
-        local val = tostring(notifData[idx]):lower()
-        if val:find("rainbow") then isRainbow = true end
-        if val:find("golden") or val:find("gold") then isGolden = true end
-    end
-
-    -- Get replion Set event
-    local replionSetEvent = nil
-    pcall(function()
-        local replionFolder = ReplicatedStorage:FindFirstChild("Packages")
-        if replionFolder then
-            local idx = replionFolder:FindFirstChild("_Index")
-            if idx then
-                for _, child in ipairs(idx:GetChildren()) do
-                    if child.Name:find("ytrev_replion") then
-                        local replionMod = child:FindFirstChild("replion")
-                        if replionMod then
-                            local remotes = replionMod:FindFirstChild("Remotes")
-                            if remotes then
-                                replionSetEvent = remotes:FindFirstChild("Set")
-                                break
-                            end
+-- Cache replion Set event - load sekali, pakai terus
+if not _G._MNA_ReplionSetEvent then
+    task.spawn(function()
+        task.wait(2)
+        pcall(function()
+            local p = ReplicatedStorage:FindFirstChild("Packages")
+            if not p then return end
+            local idx = p:FindFirstChild("_Index")
+            if not idx then return end
+            for _, child in ipairs(idx:GetChildren()) do
+                if child.Name:find("ytrev_replion") then
+                    local m = child:FindFirstChild("replion")
+                    if m then
+                        local r = m:FindFirstChild("Remotes")
+                        if r then
+                            _G._MNA_ReplionSetEvent = r:FindFirstChild("Set")
+                            print("[MNA] Replion Set event cached!")
                         end
                     end
                 end
             end
-        end
+        end)
+    end)
+end
+
+local function triggerRainbowGoldenUpdate(notifData, forceIncrement)
+    if not notifData or #notifData == 0 then return end
+
+    local isRainbow = false
+    local isGolden  = false
+
+    for i = 1, math.min(5, #notifData) do
+        local val = tostring(notifData[i]):lower()
+        if val:find("rainbow") then isRainbow = true end
+        if val:find("golden") or val:find("gold") then isGolden = true end
+    end
+
+    local ev = _G._MNA_ReplionSetEvent
+    if not ev then return end
+
+    -- Fish counter nambah SETIAP catch (confirmed format: InventoryNotifications/Items)
+    Config.YTTA.FishCounter = Config.YTTA.FishCounter + 1
+    pcall(function()
+        -- Format confirmed dari debug: Arg1=player, Arg2={cat,subcat}, Arg3=value
+        FireLocalEvent(ev, LocalPlayer, {"InventoryNotifications", "Fish"}, Config.YTTA.FishCounter)
     end)
 
-    -- FIXED: Increment counter setiap kali dipanggil (bukan stuck)
-    if isRainbow and replionSetEvent and LocalPlayer then
+    if isRainbow then
         Config.YTTA.RainbowCounter = Config.YTTA.RainbowCounter + 1
         pcall(function()
-            FireLocalEvent(replionSetEvent, LocalPlayer, {"Modifiers", "Rainbow"}, Config.YTTA.RainbowCounter)
+            -- Format confirmed: {"Modifiers", "Rainbow"}, value=13 (dari image 1)
+            FireLocalEvent(ev, LocalPlayer, {"Modifiers", "Rainbow"}, Config.YTTA.RainbowCounter)
         end)
     end
 
-    if isGolden and replionSetEvent and LocalPlayer then
+    if isGolden then
         Config.YTTA.GoldenCounter = Config.YTTA.GoldenCounter + 1
         pcall(function()
-            FireLocalEvent(replionSetEvent, LocalPlayer, {"Modifiers", "Golden"}, Config.YTTA.GoldenCounter)
-        end)
-    end
-
-    -- FIXED: Fish count selalu nambah per catch
-    if replionSetEvent and LocalPlayer then
-        Config.YTTA.FishCounter = Config.YTTA.FishCounter + 1
-        pcall(function()
-            FireLocalEvent(replionSetEvent, LocalPlayer, {"InventoryNotifications", "Fish"}, Config.YTTA.FishCounter)
+            -- Format confirmed: {"Modifiers", "Golden"}, value=7 (dari image 3)
+            FireLocalEvent(ev, LocalPlayer, {"Modifiers", "Golden"}, Config.YTTA.GoldenCounter)
         end)
     end
 end
@@ -1188,151 +1191,183 @@ local function replayAmblatantNotif()
         end
     end)
 end
-
+                        
 local function ub_loop()
     while Config.UB.Active do
         local ok, err = pcall(function()
             local currentTime = tick()
 
-            if Config.autoFishing then 
-                pcall(function() 
-                    if Events.UpdateAutoFishing then 
-                        CallRemote(Events.UpdateAutoFishing, true) 
-                    end 
-                end) 
+            if Config.autoFishing then
+                pcall(function()
+                    if Events.UpdateAutoFishing then
+                        CallRemote(Events.UpdateAutoFishing, true)
+                    end
+                end)
             end
 
-            -- FIXED: Base wait lebih cepat (0.7 -> 0.5)
             local baseWait = needCast and 0.2 or Config.UB.Settings.CancelDelay
-            if Config.antiOKOK then 
-                baseWait = baseWait + math.random(3, 15) / 100 
+            if Config.antiOKOK then
+                baseWait = baseWait + math.random(3, 15) / 100
             end
             task.wait(baseWait)
             needCast = false
 
             safeFire(function()
-                if Config.UB.Remotes.ChargeFishingRod then 
-                    pcall(function() Config.UB.Remotes.ChargeFishingRod:InvokeServer({[1] = currentTime}) end) 
+                if Config.UB.Remotes.ChargeFishingRod then
+                    pcall(function() Config.UB.Remotes.ChargeFishingRod:InvokeServer({[1] = currentTime}) end)
                 end
             end)
 
-            -- FIXED: Delay lebih cepat
-            if Config.antiOKOK then 
-                task.wait(math.random(5, 10) / 100) 
-            else 
-                task.wait(0.02) 
+            if Config.antiOKOK then
+                task.wait(math.random(5, 10) / 100)
+            else
+                task.wait(0.02)
             end
 
             safeFire(function()
-                if Config.UB.Remotes.RequestMinigame then 
-                    pcall(function() Config.UB.Remotes.RequestMinigame:InvokeServer(1, 0, currentTime) end) 
+                if Config.UB.Remotes.RequestMinigame then
+                    pcall(function() Config.UB.Remotes.RequestMinigame:InvokeServer(1, 0, currentTime) end)
                 end
             end)
 
-            local completeDelay = Config.amblatant and Config.YTTA.Settings.QHDelay or Config.UB.Settings.CompleteDelay
-            if Config.antiOKOK then 
-                completeDelay = completeDelay + math.random(-8, 8) / 100 
+            -- Delay sebelum narik
+            local completeDelay
+            if Config.amblatant then
+                -- EXTREME: langsung narik, tidak nunggu "!" dari server
+                completeDelay = Config.YTTA.Settings.MNADelay or 0.3
+                if Config.antiOKOK then
+                    completeDelay = completeDelay + math.random(-5, 10) / 100
+                end
+            else
+                completeDelay = Config.UB.Settings.CompleteDelay
+                if Config.antiOKOK then
+                    completeDelay = completeDelay + math.random(-8, 8) / 100
+                end
             end
             task.wait(math.max(completeDelay, 0.02))
 
             if not skip then
-                pcall(function() 
-                    if Config.UB.Remotes.FishingCompleted then 
-                        Config.UB.Remotes.FishingCompleted:InvokeServer() 
-                    end 
+                -- Fire catch - langsung, tidak nunggu tanda seru
+                pcall(function()
+                    if Config.UB.Remotes.FishingCompleted then
+                        Config.UB.Remotes.FishingCompleted:InvokeServer()
+                    end
                 end)
-                pcall(function() 
-                    if Config.UB.Remotes.FishingCompletedRE then 
-                        Config.UB.Remotes.FishingCompletedRE:FireServer() 
-                    end 
+                pcall(function()
+                    if Config.UB.Remotes.FishingCompletedRE then
+                        Config.UB.Remotes.FishingCompletedRE:FireServer()
+                    end
                 end)
 
                 if Config.amblatant then
                     isCaught = false
                     local waited = 0
-                    -- FIXED: Polling lebih cepat (0.03 -> 0.02, timeout 0.5 -> 0.4)
-                    while not isCaught and waited < 0.3 do 
-                        task.wait(0.01); 
-                        waited = waited + 0.01 
+                    while not isCaught and waited < 0.3 do
+                        task.wait(0.01)
+                        waited = waited + 0.01
                     end
 
                     if isCaught then
                         isCaught = false
 
-                        if #(_G.SavedData.FishCaught or {}) > 0 then 
-                            lastValidFishCaught = deepCopyArr(_G.SavedData.FishCaught) 
+                        if #(_G.SavedData.FishCaught or {}) > 0 then
+                            lastValidFishCaught = deepCopyArr(_G.SavedData.FishCaught)
                         end
-                        if #(_G.SavedData.CaughtVisual or {}) > 0 then 
-                            lastValidCaughtVisual = deepCopyArr(_G.SavedData.CaughtVisual) 
-                        end
-                        if #(_G.SavedData.FishNotif or {}) > 0 then 
-                            lastValidFishNotif = deepCopyArr(_G.SavedData.FishNotif) 
-                        end
-
-                        -- FIXED: Simpan ke history untuk rotasi
-                        if #lastValidFishNotif > 0 then
-                            table.insert(_fishNotifHistory, deepCopyArr(lastValidFishNotif))
-                            if #_fishNotifHistory > _maxFishHistory then 
-                                table.remove(_fishNotifHistory, 1) 
+                        if #(_G.SavedData.CaughtVisual or {}) > 0 then
+                            lastValidCaughtVisual = deepCopyArr(_G.SavedData.CaughtVisual)
+                            table.insert(lastValidCaughtVisualHistory, deepCopyArr(_G.SavedData.CaughtVisual))
+                            if #lastValidCaughtVisualHistory > 20 then
+                                table.remove(lastValidCaughtVisualHistory, 1)
                             end
                         end
-                        if #lastValidCaughtVisual > 0 then
-                            table.insert(lastValidCaughtVisualHistory, deepCopyArr(lastValidCaughtVisual))
-                            if #lastValidCaughtVisualHistory > 20 then 
-                                table.remove(lastValidCaughtVisualHistory, 1) 
+                        if #(_G.SavedData.FishNotif or {}) > 0 then
+                            lastValidFishNotif = deepCopyArr(_G.SavedData.FishNotif)
+                            table.insert(_fishNotifHistory, deepCopyArr(_G.SavedData.FishNotif))
+                            if #_fishNotifHistory > _maxFishHistory then
+                                table.remove(_fishNotifHistory, 1)
                             end
                         end
 
-                        -- FIXED: Replay dengan notif terpisah dan rainbow nambah
                         if #lastValidFishNotif > 0 then
                             task.spawn(function()
                                 local xr_caught = GetServerRemote("RE/FishCaught")
                                 local xr_visual = GetServerRemote("RE/CaughtFishVisual")
-                                local xr_notif = Events.fishNotif
+                                local xr_notif  = Events.fishNotif
 
-                                -- FIXED: Reset rotation index
                                 Config.YTTA.VisualRotationIndex = 0
 
-                                if xr_caught and #lastValidFishCaught > 0 then 
-                                    pcall(function() FireLocalEvent(xr_caught, unpack(lastValidFishCaught)) end) 
+                                -- Fire FishCaught
+                                -- Format confirmed: Arg1=FishName, Arg2={Weight}, Arg3=0, Arg4=0
+                                if xr_caught and #lastValidFishCaught > 0 then
+                                    pcall(function() FireLocalEvent(xr_caught, unpack(lastValidFishCaught)) end)
                                 end
 
                                 task.wait(0.004)
 
-                                if xr_notif and #lastValidFishNotif > 0 then
-                                    for i = 1, Config.YTTA.NotifCount do
-                                        -- FIXED: Pilih notif berbeda dari history
-                                        local notifData = lastValidFishNotif
-                                        if #_fishNotifHistory > 1 then
-                                            Config.YTTA.VisualRotationIndex = Config.YTTA.VisualRotationIndex + 1
-                                            local historyIdx = ((Config.YTTA.VisualRotationIndex - 1) % #_fishNotifHistory) + 1
-                                            notifData = _fishNotifHistory[historyIdx]
-                                        end
+                                for i = 1, Config.YTTA.NotifCount do
+                                    -- Rotasi ikan dari history
+                                    local notifData = lastValidFishNotif
+                                    if #_fishNotifHistory > 1 then
+                                        Config.YTTA.VisualRotationIndex = Config.YTTA.VisualRotationIndex + 1
+                                        local histIdx = ((Config.YTTA.VisualRotationIndex - 1) % #_fishNotifHistory) + 1
+                                        notifData = _fishNotifHistory[histIdx]
+                                    end
 
+                                    if xr_notif then
                                         pcall(function() FireLocalEvent(xr_notif, unpack(notifData)) end)
-                                        updateReplionInventory(notifData)
+                                    end
 
-                                        -- FIXED: Visual + Rainbow increment per catch
-                                        if xr_visual and #lastValidCaughtVisual > 0 then
-                                            local visualData = lastValidCaughtVisual
-                                            if #lastValidCaughtVisualHistory > 1 then
-                                                local visualIdx = ((Config.YTTA.VisualRotationIndex - 1) % #lastValidCaughtVisualHistory) + 1
-                                                visualData = lastValidCaughtVisualHistory[visualIdx]
+                                    updateReplionInventory(notifData)
+
+                                    -- Fire CaughtFishVisual
+                                    -- Format confirmed: Arg1=PlayerName, Arg2=Vector3, Arg3=FishName, Arg4={Weight}
+                                    if xr_visual and #lastValidCaughtVisual > 0 then
+                                        local visualData = lastValidCaughtVisual
+                                        if #lastValidCaughtVisualHistory > 1 then
+                                            local vIdx = ((Config.YTTA.VisualRotationIndex - 1) % #lastValidCaughtVisualHistory) + 1
+                                            visualData = lastValidCaughtVisualHistory[vIdx]
+                                        end
+                                        pcall(function() FireLocalEvent(xr_visual, unpack(visualData)) end)
+
+                                        -- Rainbow/Gold counter nambah per visual
+                                        pcall(function() triggerRainbowGoldenUpdate(notifData, true) end)
+                                    end
+
+                                    -- Fire Exclaim "!" sesuai format ASLI game
+                                    -- Format confirmed dari image 3
+                                    pcall(function()
+                                        if Events.exclaimEvent then
+                                            local char = LocalPlayer.Character
+                                            if char then
+                                                local head = char:FindFirstChild("Head")
+                                                if head then
+                                                    -- TextColor asli: biru (0 0.764706 1 0.333333 0 ...)
+                                                    -- Kita pakai format persis seperti yang dikirim server
+                                                    FireLocalEvent(Events.exclaimEvent, {
+                                                        UUID = HttpService:GenerateGUID(false),
+                                                        Channel = "All",
+                                                        TextData = {
+                                                            AttachTo = "Head",
+                                                            Text = "!",
+                                                            EffectType = "Exclaim",
+                                                            TextColor = Color3.fromRGB(0, 195, 255),
+                                                        },
+                                                        Duration = 0.5,
+                                                        Container = head,
+                                                    })
+                                                end
                                             end
-                                            pcall(function() FireLocalEvent(xr_visual, unpack(visualData)) end)
-                                            -- FIXED: Increment rainbow/golden PER visual
-                                            pcall(function() triggerRainbowGoldenUpdate(notifData, true) end)
                                         end
+                                    end)
 
-                                        task.wait(0.01)
+                                    task.wait(0.01)
 
-                                        if xr_caught and #lastValidFishCaught > 0 then
-                                            pcall(function() FireLocalEvent(xr_caught, unpack(lastValidFishCaught)) end)
-                                        end
+                                    if xr_caught and #lastValidFishCaught > 0 then
+                                        pcall(function() FireLocalEvent(xr_caught, unpack(lastValidFishCaught)) end)
+                                    end
 
-                                        if i < Config.YTTA.NotifCount and Config.YTTA.NotifDelay > 0 then 
-                                            task.wait(Config.YTTA.NotifDelay) 
-                                        end
+                                    if i < Config.YTTA.NotifCount and Config.YTTA.NotifDelay > 0 then
+                                        task.wait(Config.YTTA.NotifDelay)
                                     end
                                 end
                             end)
@@ -1341,8 +1376,8 @@ local function ub_loop()
                 else
                     if isCaught then
                         isCaught = false
-                        if #(_G.SavedData.FishNotif or {}) > 0 then 
-                            lastValidFishNotif = deepCopyArr(_G.SavedData.FishNotif) 
+                        if #(_G.SavedData.FishNotif or {}) > 0 then
+                            lastValidFishNotif = deepCopyArr(_G.SavedData.FishNotif)
                         end
                     end
                 end
@@ -1351,10 +1386,9 @@ local function ub_loop()
             blatantFishCycleCount = blatantFishCycleCount + 1
         end)
 
-        -- FIXED: Error recovery lebih cepat (0.1 -> 0.03)
-        if not ok then 
-            warn("[MNA] UB error: " .. tostring(err)); 
-            task.wait(0.03) 
+        if not ok then
+            warn("[MNA] UB error: " .. tostring(err))
+            task.wait(0.03)
         end
     end
 end
