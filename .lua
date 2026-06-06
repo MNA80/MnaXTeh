@@ -2586,7 +2586,8 @@ task.spawn(function()
     if Events.exclaimEvent and not _exclaimConnected then
         _exclaimConnected = true
         pcall(function()
-            Events.exclaimEvent.OnClientEvent:Connect(function(data)
+          Events.exclaimEvent.OnClientEvent:Connect(function(data)
+                if Config.amblatant then return end
                 if not Config.AutoCatch and not Config.autoFishing then return end
                 if not data or not data.TextData then return end
                 if data.TextData.EffectType ~= "Exclaim" then return end
